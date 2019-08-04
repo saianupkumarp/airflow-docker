@@ -131,6 +131,11 @@ Execute the follow script under the airflow folder with in the python console
 
 Enter `exit` and hit enter to come out of the container bash
 
+## TODO
+
+    CeleryExecutor
+    Kubernetes
+
 # Wanna help?
 
 Fork, improve and PR. ;-)
