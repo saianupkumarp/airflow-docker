@@ -1,4 +1,4 @@
-# VERSION 0.1.1
+# VERSION 0.1.2
 # AUTHOR: Anup Kumar
 # DESCRIPTION: Basic Airflow container
 # BUILD: docker build --rm -t airflow-image .
@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.3
+ARG AIRFLOW_VERSION=1.10.4
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -46,6 +46,7 @@ RUN set -ex \
         rsync \
         netcat \
         locales \
+        nano \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -75,9 +76,7 @@ RUN set -ex \
 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
-COPY requirements.txt ${AIRFLOW_HOME}/requirements.txt
-
-RUN pip install -r "${AIRFLOW_HOME}/requirements.txt"
+COPY ./requirements.txt /requirements.txt
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 

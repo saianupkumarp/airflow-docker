@@ -11,7 +11,7 @@ services:
 
     webserver:
         restart: always
-        image: airflow-image:latest
+        image: airflow-image:1.10.4
         depends_on:
             - postgres
         environment:
@@ -30,3 +30,25 @@ services:
             interval: 30s
             timeout: 30s
             retries: 3
+
+   selenium-hub:
+        restart: always
+        image: selenium/hub:latest
+        container_name: selenium-hub
+        ports:
+            - "4444:4444"
+
+    chrome:
+        restart: always
+        image: selenium/node-chrome-debug:latest
+        ports:
+            - "5900-5999:5900"
+        depends_on:
+            - selenium-hub
+        environment:
+            HUB_HOST: selenium-hub
+            HUB_PORT_4444_TCP_ADDR: selenium-hub
+            HUB_PORT_4444_TCP_PORT: 4444
+            DBUS_SESSION_BUS_ADDRESS: "/dev/null"
+        links:
+            - selenium-hub:hub

@@ -1,0 +1,102 @@
+version: '2.2'
+services:
+    redis:
+        image: 'redis:3.2.7'
+        # command: redis-server --requirepass redispass
+
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        # Uncomment these lines to persist data on the local filesystem.
+        #     - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - ./pgdata:/var/lib/postgresql/data
+
+    webserver:
+        image: dasto-airflow:1.10.4
+        restart: always
+        depends_on:
+            - postgres
+            - redis
+        environment:
+            - LOAD_EX=n
+            - EXECUTOR=Celery
+            - AIRFLOW__CORE__FERNET_KEY=E7W_AV9Z2itMs4MdNjhek3avY-i14dig56eG8LdUPEM=
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            # Uncomment to include custom plugins
+            # - ./plugins:/usr/local/airflow/plugins
+        ports:
+            - "8080:8080"
+        command: webserver
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+
+    flower:
+        image: dasto-airflow:1.10.4
+        restart: always
+        depends_on:
+            - redis
+        environment:
+            - EXECUTOR=Celery
+            # - REDIS_PASSWORD=redispass
+        ports:
+            - "5555:5555"
+        command: flower
+
+    scheduler:
+        image: dasto-airflow:1.10.4
+        restart: always
+        depends_on:
+            - webserver
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            # Uncomment to include custom plugins
+            # - ./plugins:/usr/local/airflow/plugins
+        environment:
+            - LOAD_EX=n
+            - AIRFLOW__CORE__FERNET_KEY=E7W_AV9Z2itMs4MdNjhek3avY-i14dig56eG8LdUPEM=
+            - EXECUTOR=Celery
+        command: scheduler
+
+    worker:
+        image: dasto-airflow:1.10.4
+        restart: always
+        depends_on:
+            - scheduler
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            # Uncomment to include custom plugins
+            # - ./plugins:/usr/local/airflow/plugins
+        environment:
+            - AIRFLOW__CORE__FERNET_KEY=E7W_AV9Z2itMs4MdNjhek3avY-i14dig56eG8LdUPEM=
+            - EXECUTOR=Celery
+        command: worker
+
+    selenium-hub:
+        restart: always
+        image: selenium/hub:latest
+        container_name: selenium-hub
+        ports:
+            - "4444:4444"
+
+    chrome:
+        restart: always
+        image: selenium/node-chrome-debug:latest
+        ports:
+            - "5900-5999:5900"
+        depends_on:
+            - selenium-hub
+        environment:
+            HUB_HOST: selenium-hub
+            HUB_PORT_4444_TCP_ADDR: selenium-hub
+            HUB_PORT_4444_TCP_PORT: 4444
+            DBUS_SESSION_BUS_ADDRESS: "/dev/null"
+        links:
+            - selenium-hub:hub

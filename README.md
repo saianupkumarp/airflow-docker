@@ -17,9 +17,9 @@ Clone this repository
 
 ## Build
 
-Build the airflow
+Build the airflow (Recommended)
 
-    docker build --rm -t airflow-image .
+    docker build --rm -t airflow-image:1.10.4 .
 
 Optionally install [Extra Airflow Packages](https://airflow.incubator.apache.org/installation.html#extra-package) and/or python dependencies before build time by adding the following line in the Dockerfile above the line 62:
 
@@ -27,12 +27,12 @@ Optionally install [Extra Airflow Packages](https://airflow.incubator.apache.org
 
 Optionally install [Extra Airflow Packages](https://airflow.incubator.apache.org/installation.html#extra-package) and/or python dependencies at build time by following command :
 
-    docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" -t airflow-image .
-    docker build --rm --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t airflow-image .
+    docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" -t airflow-image:1.10.4 .
+    docker build --rm --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t airflow-image:1.10.4 .
 
 or combined
 
-    docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t airflow-image .
+    docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t airflow-image:1.10.4 .
 
 ## Usage
 
@@ -46,11 +46,9 @@ For **LocalExecutor** :
 
     docker-compose -f docker-compose-LocalExecutor.yml up -d
 
-NB : If you want to have DAGs example loaded (default=False), you've to set the following environment variable :
+For **CeleryExecutor** (Recommended) :
 
-`LOAD_EX=n`
-
-    docker run -d -p 8080:8080 -e LOAD_EX=y airflow-image
+    docker-compose -f docker-compose-CeleryExecutor.yml up -d
 
 If you want to use Ad hoc query, make sure you've configured connections:
 Go to Admin -> Connections and Edit "airflow_db" set this values (equivalent to values in airflow.cfg/docker-compose*.yml) :
@@ -131,10 +129,50 @@ Execute the follow script under the airflow folder with in the python console
 
 Enter `exit` and hit enter to come out of the container bash
 
+## Steps to clear the docker images and containers
+
+1. List all containers (only IDs)
+    ```
+    docker ps -aq
+    ```
+2. Stop all running containers
+    ```
+    docker stop $(docker ps -aq)
+    ```
+3. Remove all containers
+    ```
+    docker rm $(docker ps -aq)
+    ```
+4. Remove all images
+    ```
+    docker rmi $(docker images -q)
+    ```
+
+NB: Use only incase you want to clear all the dockers and containers
+
+## Docker Compose commands 
+
+To stop
+
+    docker-compose -f docker-compose-*.yml stop
+
+To stop and remove
+
+    docker-compose -f docker-compose-*.yml down
+
+To restart
+
+    docker-compose -f docker-compose-*.yml restart
+
+To bring the container up again
+
+    docker-compose -f docker-compose-*.yml up -d
+
 ## TODO
 
-    CeleryExecutor
+    AWS ECS
     Kubernetes
+    Bash Script for Docker cleaning
 
 # Wanna help?
 
